@@ -78,9 +78,16 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Local PostgreSQL data
+postgres_data/
+
 # IPython
 profile_default/
 ipython_config.py
+
+# Docker
+docker-compose-gra.yml
+docker-compose.yml
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is

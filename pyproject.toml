@@ -2,11 +2,13 @@
 name = "app"
 version = "0.1.0"
 description = "support tickets system"
+license = "MIT"
+readme = "README.md"
+
 authors = [
     {name = "Glenda L",email = "lccbrokha@gmail.com"}
 ]
-license = "MIT"
-readme = "README.md"
+
 requires-python = ">=3.12"
 dependencies = [
     "sqlalchemy (>=2.0.43,<3.0.0)",
@@ -18,7 +20,8 @@ dependencies = [
     "requests (>=2.32.4,<3.0.0)",
     "mangum (>=0.19.0,<0.20.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
-    "aioboto3 (==15.1.0)"
+    "aioboto3 (==15.1.0)",
+    "python-dotenv (>=1.1.1,<2.0.0)"
 ]
 
 [build-system]

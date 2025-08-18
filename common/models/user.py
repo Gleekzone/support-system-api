@@ -15,7 +15,7 @@ class User(Base):
     cognito_sub = Column(String, nullable=False, unique=True)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
-    role = Column(Enum(RoleEnum), default=RoleEnum.user)
+    role = Column(Enum(RoleEnum), default=RoleEnum.support, nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     deactivated_at = Column(DateTime(timezone=True), default=None, nullable=True)
 

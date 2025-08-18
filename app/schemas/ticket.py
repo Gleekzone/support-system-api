@@ -10,7 +10,6 @@ class TicketCreate(BaseModel):
     reporter_name: str = Field(..., min_length=1, max_length=100)
     reporter_email: EmailStr
     description: str = Field(..., min_length=1, max_length=500)
-    assigned_to_id: Optional[UUID] = None
 
 
 class TicketRead(BaseModel):
