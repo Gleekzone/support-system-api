@@ -67,6 +67,7 @@ class UserService:
 
 
     def list_users(self, current_user: dict) -> List[UserRead]:
+        """List all users in the system."""
         # Check if the user is authorized to view users
         allowed_groups = ["admin", "manager"]
         user_groups = current_user.get("cognito:groups", [])
@@ -78,6 +79,7 @@ class UserService:
 
 
     def deactivate_user(self, user_id: UUID, current_user: dict) -> UserRead:
+        """Deactivate a user in the system."""
         # Check if the user is authorized to deactivate users
         allowed_groups = ["admin", "manager"]
         user_groups = current_user.get("cognito:groups", [])

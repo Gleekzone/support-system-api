@@ -8,6 +8,7 @@ from app.enums import enums
 
 
 class Ticket(Base):
+    """Model for support tickets."""
     __tablename__ = "tickets"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
@@ -25,6 +26,7 @@ class Ticket(Base):
 
 
 class TicketImportJob(Base):
+    """Model for ticket import jobs."""
     __tablename__ = "ticket_import_jobs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

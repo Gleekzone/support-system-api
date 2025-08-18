@@ -8,8 +8,7 @@ from app.schemas.user import RoleEnum
 
 
 class User(Base):
-    '''User model representing a user in the system.'''
-
+    """Model for users in the system."""
     __tablename__ = "users"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4) 

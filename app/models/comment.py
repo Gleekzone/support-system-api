@@ -7,6 +7,7 @@ from app.dependencies.db import Base
 
 
 class Comment(Base):
+    """Model for comments on tickets."""
     __tablename__ = "comments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
