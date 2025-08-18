@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Query
 from typing import Optional
 from sqlalchemy.orm import Session
-from app.dependencies.db import get_db
+from fastapi import APIRouter, Depends, Query
+from db.db import get_db
 from app.dependencies.get_user import get_current_user
 from app.services.ticket_service import TicketService
 from app.schemas.ticket import TicketCreate, TicketRead, TicketUpdateStatus, TicketAssignUser, TicketBulkResponse

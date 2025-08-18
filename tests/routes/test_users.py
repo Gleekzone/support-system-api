@@ -1,6 +1,6 @@
 import pytest
-from app.main import app
 from unittest.mock import MagicMock
+from app.main import app
 from app.dependencies.get_user import get_current_user
 
 mock_cognito = MagicMock()

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
-from app.dependencies.db import get_db
+from db.db import get_db
 from app.dependencies.get_user import get_current_user
 from app.services.comment_service import CommentService
 from app.schemas.comment import CommentCreate, CommentRead

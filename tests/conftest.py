@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 from fastapi import HTTPException, status
 from app.main import app
 from app.enums.enums import RoleEnum
-from app.dependencies.db import get_db
-from app.models.user import User
+from db.db import get_db
+from db.models.user import User
 from app.enums.enums import TicketStatusEnum
 
 

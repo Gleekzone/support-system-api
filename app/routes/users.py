@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, Header, Path
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.orm import Session
-from app.dependencies.db import get_db
+from db.db import get_db
 from app.dependencies.get_user import get_current_user
 from app.services.user_service import UserService
 from app.schemas.user import UserCreate, UserRead

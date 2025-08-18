@@ -1,13 +1,14 @@
-from sqlalchemy.orm import Session
-from app.models.ticket import Ticket, TicketImportJob
-from app.schemas.ticket import TicketCreate, TicketUpdateStatus, TicketAssignUser, TicketRead
 from uuid import UUID
 import uuid
-import boto3
 from typing import List, Optional
-from fastapi import HTTPException, status
-from app.config  import S3_BUCKET_NAME
 import json
+from sqlalchemy.orm import Session
+import boto3
+from fastapi import HTTPException, status
+from db.models.ticket import Ticket, TicketImportJob
+from app.schemas.ticket import TicketCreate, TicketUpdateStatus, TicketAssignUser, TicketRead
+from app.config  import S3_BUCKET_NAME
+
 
 s3_client = boto3.client('s3')
 

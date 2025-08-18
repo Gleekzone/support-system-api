@@ -1,11 +1,11 @@
-from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime, timezone
-from app.models.user import User
+from typing import List
+from sqlalchemy.orm import Session
+from fastapi import HTTPException
+from db.models.user import User
 from app.schemas.user import UserCreate, UserRead
 from app.services.cognito_service import CognitoService
-from fastapi import HTTPException
-from typing import List
 
 
 class UserService:
