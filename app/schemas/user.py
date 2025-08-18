@@ -1,14 +1,14 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 from uuid import UUID
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 from app.enums.enums import RoleEnum
 
 
 class UserBase(BaseModel):
     name: str
     email: EmailStr
-    role: RoleEnum = RoleEnum.user
+    role: RoleEnum = RoleEnum.support
 
 
 class UserCreate(UserBase):

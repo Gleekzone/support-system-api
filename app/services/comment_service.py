@@ -1,7 +1,7 @@
 from uuid import UUID
 from typing import List
 from sqlalchemy.orm import Session
-from db.models.comment import Comment
+from common.models.comment import Comment
 from app.schemas.comment import CommentCreate, CommentRead
 
 

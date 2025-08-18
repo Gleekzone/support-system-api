@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from mangum import Mangum
 from app.routes import comments, tickets, users
-from db.db import Base, engine
+from common.db import Base, engine
 
 
 app = FastAPI(title="Ticket System API")

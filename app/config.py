@@ -10,3 +10,6 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost:port/
 
 # S3 configuration
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+
+# SQS configuration
+SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL")

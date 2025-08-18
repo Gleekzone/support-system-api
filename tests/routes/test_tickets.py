@@ -151,7 +151,6 @@ def test_cannot_update_unassigned_ticket(client, ticket_payload, mock_current_us
     assert ticket.status == TicketStatusEnum.new
     # Now retrieve the ticket by ID
     response = client.patch(f"/tickets/{ticket.id}/status", json={"status": {"status": "in_progress"}})
-    print(response.json())
     assert response.status_code == 403  # Forbidden
     assert response.json()["detail"] == "Ticket not assigned to any user"
 
@@ -190,7 +189,6 @@ def test_create_bulk_ticket_job(mock_s3_client, client, mock_current_user_manage
     {"reporter_name": "Bob", "reporter_email": "bob@example.com", "description": "Ticket 2"}]
 
     response = client.post("/tickets/bulk", json={"tickets_create": ticket_payload})
-    print(response.json())  # Ver detalles si falla
     assert response.status_code == 200
 
     # Clear overrides after test

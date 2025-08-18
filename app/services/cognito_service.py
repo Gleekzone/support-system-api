@@ -12,7 +12,7 @@ class CognitoService:
         self.user_pool_id = COGNITO_USER_POOL_ID
         self.client_id = COGNITO_CLIENT_ID
     
-    def create_user(self, name: str, email: str, password: str):
+    def create_user(self, name: str, email: str, password: str, role: str):
         """Create a new user in Cognito."""
         try:
             response = self.cognito_client.admin_create_user(
@@ -20,10 +20,21 @@ class CognitoService:
                 Username=email,
                 UserAttributes=[
                     {'Name': 'email', 'Value': email},
-                    {'Name': 'name', 'Value': name}
+                    {'Name': 'email_verified', 'Value': 'true'}
                 ],
-                TemporaryPassword=password,
                 MessageAction="SUPPRESS" # Suppress the welcome email
+            )
+            self.cognito_client.admin_set_user_password(
+                UserPoolId=self.user_pool_id,
+                Username=email,
+                Password=password,
+                Permanent=True
+            )
+            # add user to group
+            self.cognito_clien.admin_add_user_to_group(
+                UserPoolId=self.user_pool_id,
+                Username=email,
+                GroupName=role
             )
             return response
         except self.cognito_client.exceptions.UsernameExistsException:

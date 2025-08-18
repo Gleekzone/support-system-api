@@ -1,20 +1,19 @@
 from uuid import UUID
 import uuid
 from typing import List, Optional
-import json
+import json, aioboto3
 from sqlalchemy.orm import Session
-import boto3
 from fastapi import HTTPException, status
-from db.models.ticket import Ticket, TicketImportJob
+from common.models.ticket import Ticket, TicketImportJob
 from app.schemas.ticket import TicketCreate, TicketUpdateStatus, TicketAssignUser, TicketRead
-from app.config  import S3_BUCKET_NAME
+from app.config  import S3_BUCKET_NAME, SQS_QUEUE_URL
+from app.dependencies.auth import check_user_roles
 
-
-s3_client = boto3.client('s3')
 
 class TicketService:
     def __init__(self, db: Session):
         self.db = db
+        self.s3_session = aioboto3.Session()
     
     def create_ticket(self, ticket_create: TicketCreate) -> TicketRead:
         """Create a new ticket."""
@@ -37,10 +36,7 @@ class TicketService:
     def update_ticket(self, current_user: dict, ticket_id: UUID, status: TicketUpdateStatus) -> TicketRead:
         """Update the status of a ticket."""
         allowed_groups = ["support", "manager"]
-        user_groups = current_user.get("cognito:groups", [])
-        if not any(g in allowed_groups for g in user_groups):
-            raise HTTPException(status_code=403, detail="User not authorized")
-        
+        check_user_roles(current_user, allowed_groups)
         ticket = self.get_ticket(ticket_id)
 
         # Check if the ticket is assigned to a user
@@ -66,9 +62,7 @@ class TicketService:
         """Assign a ticket to a user."""
         # Check if the user is authorized to assign tickets
         allowed_groups = ["admin", "manager"]
-        user_groups = current_user.get("cognito:groups", [])
-        if not any(g in allowed_groups for g in user_groups):
-            raise HTTPException(status_code=403, detail="User not authorized")
+        check_user_roles(current_user, allowed_groups)
         
         ticket = self.get_ticket(ticket_id)
         ticket.assigned_to_id = assigned_to_id.assigned_to_id
@@ -80,10 +74,8 @@ class TicketService:
         """List tickets with optional filters for assigned user and status."""
         # Check if the user is authorized to view tickets
         allowed_groups = ["admin", "support", "manager"]
-        user_groups = current_user.get("cognito:groups", [])
-        if not any(g in allowed_groups for g in user_groups):
-            raise HTTPException(status_code=403, detail="User not authorized")
-        
+        check_user_roles(current_user, allowed_groups)
+
         query = self.db.query(Ticket)
         # Apply filters if provided
         if assigned_to_id:
@@ -93,32 +85,47 @@ class TicketService:
         tickets = query.all()
         return [TicketRead.model_validate(ticket) for ticket in tickets]
 
-    def create_bulk_ticket_job(self, current_user: dict, tickets_json: List[TicketCreate]) -> dict:
+    async def create_bulk_ticket_job(self, current_user: dict, tickets_json: List[TicketCreate]) -> dict:
         """Create multiple tickets in bulk."""
         # Validate if the user is authorized to create bulk tickets
         allowed_groups = ["manager"]
-        user_groups = current_user.get("cognito:groups", [])
-        if not any(g in allowed_groups for g in user_groups):
-            raise HTTPException(status_code=403, detail="User not authorized")
-        # generate a name id on s3
-        s3_key = f"tickets/{uuid.uuid4()}.json"
-        # Upload the tickets_json to S3 (assuming you have an S3 client set up)
-        s3_client.put_object(
-            Bucket=S3_BUCKET_NAME,
-            Key=s3_key,
-            Body=json.dumps([ticket.dict() for ticket in tickets_json]),
-            ContentType="application/json"
-        )
-        s3_url = f"s3://{S3_BUCKET_NAME}/{s3_key}"
-
-        # Create pending job in the database
-        user_id = current_user["sub"]
-        job = TicketImportJob(
-            created_by=user_id,
-            s3_url=s3_url,
+        check_user_roles(current_user, allowed_groups)
+        try:
+            job = TicketImportJob(
+            created_by=current_user["sub"],
+            s3_url="",
             status="PENDING"
-        )
-        self.db.add(job)
-        self.db.commit()
-        self.db.refresh(job)
-        return {"msg": "Bulk import job registered", "job_id": job.id, "s3_url": s3_url}
+            )
+            self.db.add(job)
+            await self.db.commit()
+            await self.db.refresh(job)
+
+            # Upload tickets to S3
+            s3_key = f"tickets/{uuid.uuid4()}.json"
+            s3_url = f"s3://{S3_BUCKET_NAME}/{s3_key}"
+            async with self.s3_session.client('s3') as s3_client:
+                await s3_client.put_object(
+                    Bucket=S3_BUCKET_NAME,
+                    Key=s3_key,
+                    Body=json.dumps([ticket.dict() for ticket in tickets_json]),
+                    ContentType="application/json"
+                )
+            # Update the job with the S3 URL
+            job.s3_url = s3_url
+            await self.db.commit()
+
+            # Send a message to SQS to process the job
+            async with self.s3_session.client('sqs') as sqs:
+                await sqs.send_message(
+                    QueueUrl=SQS_QUEUE_URL,
+                    MessageBody=json.dumps({
+                    "job_id": job.id,
+                    "s3_url": s3_url
+                    }))
+            return {"job_id": job.id, "status": "queued", "s3_url": s3_url}
+        except Exception as e:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error creating bulk ticket job: {str(e)}"
+            )
