@@ -31,3 +31,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
 httpx = "^0.28.1"
+moto = {extras = ["s3"], version = "^5.1.10"}

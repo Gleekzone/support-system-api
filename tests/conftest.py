@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 from fastapi import HTTPException, status
 from app.main import app
 from app.enums.enums import RoleEnum
-from db.db import get_db
-from db.models.user import User
+from common.db import get_db
+from common.models.user import User
 from app.enums.enums import TicketStatusEnum
 
 
@@ -42,21 +42,12 @@ def mock_db_session(monkeypatch):
     session._tickets_store = tickets_store
 
     # Patch get_db para usar esta sesión mock
-    monkeypatch.setattr("app.dependencies.db.get_db", lambda: session)
+    monkeypatch.setattr("common.db.get_db", lambda: session)
 
     yield session
 
 
 # Fixtures for different user roles
-@pytest.fixture
-def customer_user():
-    """Returns a user with a 'user' role."""
-    return User(
-        id=uuid4(),
-        name="John Doe",
-        email="john@example.com",
-        role=RoleEnum.user
-    )
 
 @pytest.fixture
 def support_user():
