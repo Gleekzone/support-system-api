@@ -3,7 +3,7 @@ from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
 from app.schemas.comment import CommentRead
-from app.enums.enums import TicketStatusEnum
+from common.enums import TicketStatusEnum
 
 
 class TicketCreate(BaseModel):

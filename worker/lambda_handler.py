@@ -9,7 +9,7 @@ from common.logger import logger
 def lambda_handler(event, context):
     """ Lambda handler to process ticket import jobs from SQS."""
     session = SessionLocal()
-    worker_service = WorkerService(db_session=session)
+    worker_service = WorkerService(db=session)
 
     try:
         for record in event.get("Records", []):

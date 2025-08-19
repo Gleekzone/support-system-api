@@ -6,10 +6,10 @@ from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 from fastapi import HTTPException, status
 from app.main import app
-from app.enums.enums import RoleEnum
+from common.enums import RoleEnum
 from common.db import get_db
 from common.models.user import User
-from app.enums.enums import TicketStatusEnum
+from common.enums import TicketStatusEnum
 
 
 @pytest.fixture

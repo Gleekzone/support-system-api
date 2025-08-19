@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID
 from app.schemas.ticket import TicketRead
-from app.enums.enums import TicketStatusEnum
+from common.enums import TicketStatusEnum
 from unittest.mock import patch
 from app.dependencies.get_user import get_current_user
 from app.main import app

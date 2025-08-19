@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
-from app.enums.enums import RoleEnum
+from common.enums import RoleEnum
 
 
 class UserBase(BaseModel):

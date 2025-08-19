@@ -7,7 +7,7 @@ from common.logger import logger
 
 
 class WorkerService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session = None):
         self.db = db
         self.s3_session = aioboto3.Session()
     

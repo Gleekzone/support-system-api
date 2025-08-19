@@ -1,26 +1,21 @@
-FROM public.ecr.aws/lambda/python:3.11
+FROM public.ecr.aws/lambda/python:3.12
+
+# Set the working directory
+ENV LAMBDA_TASK_ROOT=/var/task
 
 # Poetry install
 RUN pip install --no-cache-dir poetry
 
 # Copy pyproject.toml and poetry.lock
-COPY pyproject.toml poetry.lock* ./
+COPY pyproject.toml poetry.lock ${LAMBDA_TASK_ROOT}/
 
 # Install dependencies directly in the global Lambda environment
 RUN poetry config virtualenvs.create false \
     && poetry install --no-root --no-interaction --no-ansi --without dev
 
-# Copy code
-COPY worker/ ./worker/
-COPY common/ ./common/
+# copy application code
+COPY worker/ ${LAMBDA_TASK_ROOT}/worker/
+COPY common/ ${LAMBDA_TASK_ROOT}/common/
 
-# Copy entrypoint script
-COPY lambda_entrypoint.sh /lambda_entrypoint.sh
-RUN chmod +x /lambda_entrypoint.sh
-
-# Set PYTHONPATH
-ENV PYTHONPATH="/:${PYTHONPATH}"
-
-# ENTRYPOINT y handler
-ENTRYPOINT ["/lambda_entrypoint.sh"]
+# Set the CMD to your handler (could also be done as a parameter override outside of the Dockerfile)
 CMD ["worker.lambda_handler.lambda_handler"]

@@ -10,7 +10,7 @@ COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
 COGNITO_CLIENT_ID = os.getenv("COGNITO_CLIENT_ID")
 
 # Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://admin:admin@localhost:port/db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:pass@host.docker.internal:5432/mydb")
 
 # S3 configuration
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")

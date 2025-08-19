@@ -1,0 +1,105 @@
+name: ci-cd
+
+on:
+  push:
+    branches: ["**"]   # tests in all branches; included main (merge)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Run Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install deps
+        run: |
+          pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          # instala pytest si no estaba en requirements
+          python -c "import pytest" 2>/dev/null || pip install pytest
+
+      - name: Pytest
+        run: pytest -q
+
+  deploy:
+    name: Build, push image & deploy Lambda
+    needs: tests
+    if: github.ref == 'refs/heads/main'    # just main (merge)
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # OIDC
+      contents: read
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPO: ticket-system-api-twp-image-repo
+      LAMBDA_FUNCTION: ticket-system-api-twp-api-fn
+      SSM_PARAM: /app/prod/db/creds
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS creds (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-push-ecr   # <-- actualiza
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Docker image (ARM64)
+        id: build
+        run: |
+          set -euo pipefail
+          IMAGE_URI=${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO }}:${{ github.sha }}
+          docker build --platform linux/arm64 -t "$IMAGE_URI" .
+          docker push "$IMAGE_URI"
+          echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+
+      - name: Update Lambda code to new image
+        run: |
+          aws lambda update-function-code \
+            --function-name "${{ env.LAMBDA_FUNCTION }}" \
+            --image-uri "${{ steps.build.outputs.image_uri }}" \
+            --no-cli-pager
+
+      - name: Fetch DB creds from SSM
+        id: ssm
+        run: |
+          set -euo pipefail
+          VAL=$(aws ssm get-parameter --name "$SSM_PARAM" --with-decryption --query 'Parameter.Value' --output text)
+          DB_USER=$(echo "$VAL" | jq -r '.username')
+          DB_PASS=$(echo "$VAL" | jq -r '.password')
+          echo "::add-mask::$DB_USER"
+          echo "::add-mask::$DB_PASS"
+          echo "DB_USER=$DB_USER" >> "$GITHUB_ENV"
+          echo "DB_PASS=$DB_PASS" >> "$GITHUB_ENV"
+
+      - name: Merge & update Lambda environment
+        run: |
+          set -euo pipefail
+          CURRENT=$(aws lambda get-function-configuration \
+            --function-name "${{ env.LAMBDA_FUNCTION }}" \
+            --query 'Environment.Variables' --output json)
+          NEW=$(jq -c \
+            --arg du "${{ env.DB_USER }}" \
+            --arg dp "${{ env.DB_PASS }}" \
+            --arg dh "${{ env.DB_HOST }}" \
+            --arg po "${{ env.DB_PORT }}" \
+            '. + {DB_USER:$du, DB_PASS:$dp, DB_HOST:$dh, DB_PORT:$po}' \
+            <<< "${CURRENT:-{}}")
+          aws lambda update-function-configuration \
+            --function-name "${{ env.LAMBDA_FUNCTION }}" \
+            --environment "Variables=$NEW" \
+            --no-cli-pager

@@ -1,6 +1,6 @@
 import boto3
 from fastapi import HTTPException
-from app.config import COGNITO_REGION, COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID
+from common.config import COGNITO_REGION, COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID
 
 
 class CognitoService:
