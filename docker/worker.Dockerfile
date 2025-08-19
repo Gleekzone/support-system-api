@@ -3,11 +3,6 @@ FROM public.ecr.aws/lambda/python:3.12
 # Set the working directory
 ENV LAMBDA_TASK_ROOT=/var/task
 
-RUN apt-get update && apt-get install -y \
-    curl \
-    build-essential \
-    python3-distutils \
-    && rm -rf /var/lib/apt/lists/*
 
 ENV POETRY_HOME="/opt/poetry" \
 POETRY_NO_INTERACTION=1 \
