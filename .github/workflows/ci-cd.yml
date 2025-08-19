@@ -24,8 +24,9 @@ jobs:
       - name: Install deps
         run: |
           pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pip install poetry
+          if [ -f pyproject.toml ]; then poetry install --no-root; fi
+          if [ -f poetry.lock ]; then poetry install --with dev --no-root; fi
           # instala pytest si no estaba en requirements
           python -c "import pytest" 2>/dev/null || pip install pytest
 
