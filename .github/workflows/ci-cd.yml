@@ -48,7 +48,8 @@ jobs:
     env:
       AWS_REGION: us-east-1
       ECR_REPO: ticket-system-api-twp-image-repo
-      LAMBDA_FUNCTION: ticket-system-api-twp-api-fn
+      LAMBDA_API_FUNCTION: ticket-system-api-twp-api-fn
+      LAMBDA_WORKER_FUNCTION: ticket-system-api-twp-worker-fn
       SSM_PARAM: /app/prod/db/creds
     steps:
       - uses: actions/checkout@v4
@@ -67,16 +68,24 @@ jobs:
         id: build
         run: |
           set -euo pipefail
-          IMAGE_URI=${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO }}:${{ github.sha }}
-          docker build --platform linux/arm64 -t "$IMAGE_URI" .
-          docker push "$IMAGE_URI"
-          echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+          API_IMAGE_URI=${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO }}:lambda-api-${{ github.sha }}
+          WORKER_IMAGE_URI=${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO }}:lambda-worker-${{ github.sha }}
+          docker buildx build --platform linux/arm64 --provenance=false -t ${API_IMAGE_URI} -f docker/api.Dockerfile .
+          docker push ${API_IMAGE_URI}
+          docker buildx build --platform linux/arm64 --provenance=false -t ${WORKER_IMAGE_URI} -f docker/worker.Dockerfile .
+          docker push ${WORKER_IMAGE_URI}
+          echo "api_image_uri=${API_IMAGE_URI}" >> "$GITHUB_OUTPUT"
+          echo "worker_image_uri=${WORKER_IMAGE_URI}" >> "$GITHUB_OUTPUT"
 
       - name: Update Lambda code to new image
         run: |
           aws lambda update-function-code \
-            --function-name "${{ env.LAMBDA_FUNCTION }}" \
-            --image-uri "${{ steps.build.outputs.image_uri }}" \
+            --function-name "${{ env.LAMBDA_API_FUNCTION }}" \
+            --image-uri "${{ steps.build.outputs.api_image_uri }}" \
+            --no-cli-pager
+          aws lambda update-function-code \
+            --function-name "${{ env.LAMBDA_WORKER_FUNCTION }}" \
+            --image-uri "${{ steps.build.outputs.worker_image_uri }}" \
             --no-cli-pager
 
       - name: Fetch DB creds from SSM
@@ -91,11 +100,11 @@ jobs:
           echo "DB_USER=$DB_USER" >> "$GITHUB_ENV"
           echo "DB_PASS=$DB_PASS" >> "$GITHUB_ENV"
 
-      - name: Merge & update Lambda environment
+      - name: Merge & update Lambda API environment
         run: |
           set -euo pipefail
           CURRENT=$(aws lambda get-function-configuration \
-            --function-name "${{ env.LAMBDA_FUNCTION }}" \
+            --function-name "${{ env.LAMBDA_API_FUNCTION }}" \
             --query 'Environment.Variables' --output json)
           NEW=$(jq -c \
             --arg du "${{ env.DB_USER }}" \
@@ -105,6 +114,24 @@ jobs:
             '. + {DB_USER:$du, DB_PASS:$dp, DB_HOST:$dh, DB_PORT:$po}' \
             <<< "${CURRENT:-{}}")
           aws lambda update-function-configuration \
-            --function-name "${{ env.LAMBDA_FUNCTION }}" \
+            --function-name "${{ env.LAMBDA_API_FUNCTION }}" \
+            --environment "Variables=$NEW" \
+            --no-cli-pager
+
+      - name: Merge & update Lambda WORKER environment
+        run: |
+          set -euo pipefail
+          CURRENT=$(aws lambda get-function-configuration \
+            --function-name "${{ env.LAMBDA_WORKER_FUNCTION }}" \
+            --query 'Environment.Variables' --output json)
+          NEW=$(jq -c \
+            --arg du "${{ env.DB_USER }}" \
+            --arg dp "${{ env.DB_PASS }}" \
+            --arg dh "${{ env.DB_HOST }}" \
+            --arg po "${{ env.DB_PORT }}" \
+            '. + {DB_USER:$du, DB_PASS:$dp, DB_HOST:$dh, DB_PORT:$po}' \
+            <<< "${CURRENT:-{}}")
+          aws lambda update-function-configuration \
+            --function-name "${{ env.LAMBDA_WORKER_FUNCTION }}" \
             --environment "Variables=$NEW" \
             --no-cli-pager
