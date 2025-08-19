@@ -7,6 +7,7 @@ from app.services.ticket_service import TicketService
 from app.schemas.ticket import TicketCreate, TicketRead, TicketUpdateStatus, TicketAssignUser, TicketBulkResponse
 from app.services.comment_service import CommentService
 from app.schemas.comment import CommentCreate, CommentRead
+from common.logger import logger
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
@@ -14,6 +15,7 @@ router = APIRouter(prefix="/tickets", tags=["tickets"])
 @router.post("/", response_model=TicketRead)
 def create_ticket(ticket_create: TicketCreate, db: Session = Depends(get_db)):
     """Create a new ticket."""
+    logger.info(f"Creating ticket: {ticket_create}")
     ticket_service = TicketService(db)
     return ticket_service.create_ticket(ticket_create)
 
@@ -31,6 +33,7 @@ def list_tickets(assigned_to_id: Optional[str] = Query(None, description="Filter
                  db: Session = Depends(get_db),
                  current_user: dict = Depends(get_current_user)):
     """List all tickets."""
+    logger.info(f"Listing tickets for user: {current_user}, assigned_to_id: {assigned_to_id}, status: {status}")
     ticket_service = TicketService(db)
     return ticket_service.list_tickets(current_user, assigned_to_id, status)
 

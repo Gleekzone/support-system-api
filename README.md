@@ -99,6 +99,7 @@ docker push <ecr-repo-url>:latest
 
 5. Scalability: SQS is used for asynchronous processing of bulk ticket uploads.
 
+6. CI/CD: GitHub Actions is used for automating testing, linting, and deployment workflows to ensure code quality and streamline the deployment process.
 
 ### Testing
 
@@ -116,6 +117,7 @@ The infrastructure is provisioned using Terraform and includes:
 - **RDS (PostgreSQL)**: Stores user and ticket data.
 - **S3**: Used for file storage.
 - **SQS**: Handles bulk ticket processing.
+- **CloudWatch**: Monitors application logs, metrics, and performance for debugging and operational insights.
 
 
 ### Example Deployment
@@ -125,6 +127,14 @@ The infrastructure is provisioned using Terraform and includes:
 - **S3 Bucket**: <bucket-name>
 - **Cognito User Pool ID**: <user-pool-id>
 
+### API Documentation
+
+The API endpoints and their respective request/response JSON payloads can be explored using the following tools:
+
+- **Swagger URL**: [Swagger Documentation](http://127.0.0.1:8000/docs)
+- **ReDoc URL**: [ReDoc Documentation](http://127.0.0.1:8000/redoc)
+
+Both provide an interactive interface to test and view all available endpoints.
 
 ### License
 ```bash

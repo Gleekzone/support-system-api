@@ -8,6 +8,7 @@ from common.models.ticket import Ticket, TicketImportJob
 from app.schemas.ticket import TicketCreate, TicketUpdateStatus, TicketAssignUser, TicketRead
 from common.config  import S3_BUCKET_NAME, SQS_QUEUE_URL
 from app.dependencies.auth import check_user_roles
+from common.logger import logger
 
 
 class TicketService:

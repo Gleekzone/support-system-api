@@ -21,3 +21,8 @@ class UserRead(UserBase):
     id: UUID
     created_at: datetime
     deactivated_at: Optional[datetime] = None
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
