@@ -30,8 +30,8 @@ jobs:
           # instala pytest si no estaba en requirements
           python -c "import pytest" 2>/dev/null || pip install pytest
 
-      - name: Pytest
-        run: pytest -q
+      - name: Run tests
+        run: poetry run pytest
 
   deploy:
     name: Build, push image & deploy Lambda
