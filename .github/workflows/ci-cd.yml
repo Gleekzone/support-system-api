@@ -31,7 +31,11 @@ jobs:
           python -c "import pytest" 2>/dev/null || pip install pytest
 
       - name: Run tests
-        run: poetry run pytest
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          export PYTHONPATH="${PYTHONPATH}:${GITHUB_WORKSPACE}"
+          poetry run pytest
+
 
   deploy:
     name: Build, push image & deploy Lambda
