@@ -56,7 +56,7 @@ jobs:
       - name: Configure AWS creds (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-push-ecr   # <-- actualiza
+          role-to-assume: arn:aws:iam::841162676531:role/github-actions-push-ecr   # <-- actualiza
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
