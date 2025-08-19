@@ -4,7 +4,8 @@ FROM public.ecr.aws/lambda/python:3.12
 ENV LAMBDA_TASK_ROOT=/var/task
 
 # Poetry install
-RUN pip install --no-cache-dir poetry
+# Instalar Poetry (forma recomendada)
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # Copy pyproject.toml and poetry.lock
 COPY pyproject.toml poetry.lock ${LAMBDA_TASK_ROOT}/
